@@ -9,6 +9,8 @@
     "restify": "1.4.x"
   },
   "devDependencies": {
+    "mocha": "1.7.x",
+    "coffee-script": "1.4.x"
   },
   "engines": {
     "node": "0.8.6",
