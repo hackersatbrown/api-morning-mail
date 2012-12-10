@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "node bin/app.js"
   },
   "dependencies": {
     "restify": "1.4.x"
