@@ -15,5 +15,3 @@ describe "/posts", ->
       client.get "/posts", (err, req, res, data) ->
         # TODO check stuff here
         done err
-
-
