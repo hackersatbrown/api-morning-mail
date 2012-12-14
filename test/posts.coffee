@@ -14,36 +14,68 @@ before ->
 describe "/posts", ->
   
   describe "GET /posts", ->
-    it "should send today's MM posts", (done) ->
-      assert.equal loadToday(),
-        client.get "/posts", (err, req, res, data) ->
-          # TODO check stuff here
-          if err
-            done err
+
+    ### TEST COMBINATIONS OF TODAY AND ALL ###
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts", checkToday "all", done
+    
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts?days=1", checkToday "all", done
+
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts?days=1&date=12-13-12", checkToday "all", done
+      
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts?days=1&date=12-13-12&feed=all", checkToday "all", done
+    
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts?date=12-13-12", checkToday "all", done
+    
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts?date=12-13-12&feed=all", checkToday "all", done
+   
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts?date=12-13-12&feed=all&days=1", checkToday "all", done
+    
+    it "should send 12-13's 'all' MM posts", (done) ->
+      client.get "/posts?feed=all", checkToday "all", done
+   
+    ### TEST TODAY AND UNDERGRAD ###
+    it "should send 12-13's 'undergrad' MM posts", (done) ->
+      client.get "/posts?feed=undergrad", checkToday "undergrad", done
+    
+    ### TEST THE LAST WEEK ###
+    it "should send the last week of 'all' MM posts", (done) ->
+      client.get "/posts?days=7&feed=undergrad", checkWeek "all", done
+    
+    it "should send the last week of 'undergrad' MM posts", (done) ->
+      client.get "/posts?days=7&feed=undergrad", checkWeek "undergrad", done
+
+checkToday = (feed, done) ->
+  (err, req, res, data) ->
+    if err
+      done err
+    loadToday feed, (today) ->
+      assert.equal data, today
       done()
 
-    ###
-    it "should send the last week of MM posts", (done) ->
-      assert.equal loadWeek(),
-        client.get "/posts?days=7", (err, req, res, data) ->
-          if err
-            done err
-          data
-    ###
-          
+checkWeek = (feed, done) ->
+  (err, req, res, data) ->
+    if err
+      done err
+    loadWeek feed, (week) ->
+      assert.equal data, week
+      console.log "week checked"
+      done()
 
-loadToday = () ->
-  today = null
-  fs.readFile "#{testdata}/12-13-1-all.json", (err, data) ->
+loadToday = (feed, next) ->
+  fs.readFile "#{testdata}/12-13-1-#{feed}.json", (err, data) ->
     if err
       throw err
-    today = data
-  return today
+    next JSON.parse data
 
-loadWeek = () ->
-  week = null
-  fs = readFile "#{testdata}/12-13-7-all.json", (err, data) ->
+loadWeek = (feed, next) ->
+  fs.readFile "#{testdata}/12-13-7-#{feed}.json", (err, data) ->
     if err
       throw err
-    week = data
-  return today
+    next JSON.parse data

@@ -21,7 +21,7 @@ task "xml2json", "convert xml file to json using xml2js", (options) ->
     parser.parseString data, (err, result) ->
       if err
         throw err
-      fs.writeFile output, JSON.stringify result, (err) ->
+      fs.writeFile output, JSON.stringify(result), (err) ->
         if err
           throw err
         console.log "#{output} written."

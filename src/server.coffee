@@ -1,6 +1,7 @@
 restify = require "restify"
 fs = require "fs"
 xml2js = require "xml2js"
+_ = require "underscore"
 
 parser = new xml2js.Parser()
 
@@ -10,33 +11,33 @@ transformreq = (err, req, next) ->
   if err
     err
   newreq = req
-  next[0] newreq, next[1]
+  _.first(next) newreq, _.rest next
 
 ### DATA FETCHERS ###
 fetchdata = (req, next) ->
   next {error: "not implemented yet"}, null
 
+
+# fetch test data based on request
 fetchtestdata = (req, next) ->
-  testdata = null
-  
   days = req.params.days
   feed = req.params.feed
   
-  fs.readFile "test/data/12-13-1-all.xml", (err, data) ->
+  fs.readFile "test/data/12-13-1-all.xml", (err, data) =>
     if err
-      next err, null
-    parser.parseString data, (err, result) ->
+      _.first(next) err, null
+    parser.parseString data, (err, result) =>
       if err
-        next err, null
-      testdata = JSON.stringify result
-  next null, testdata
+        _.first(next) err, null
+      _.first(next) null, result, _.rest next
+
 
 ### OUTPUT TRANSFORMERS ###
-transformres = (err, res, next = (x) -> x) ->
+transformres = (err, res, next) ->
   if err
     next err
   newres = res
-  next newres
+  _.first(next) newres
 
 
 # Server config
@@ -52,8 +53,9 @@ switch process.env.NODE_ENV
     # Do some real stuff
     fetchres = fetchdata
 
-server.get "/posts", (req, res, next) ->
-  res.send transformreq null, req, [fetchres, transformres]
+server.get "/posts", (req, res, next) =>
+  _.bindAll(res)
+  transformreq null, req, [fetchres, transformres, res.send]
 
 server.listen (process.env.PORT or 8080), ->
   console.log "#{server.name} listening at #{server.url}"
