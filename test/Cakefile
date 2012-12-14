@@ -70,7 +70,7 @@ task "xml2json", "convert xml file to json using xml2js", (options) ->
   dir = options.output or "."
   output = dir + "/" + outfile
   fs.createReadStream(file).pipe(parser)
-  parser.on "end", () ->
+  parser.on "end", ->
     result = {"posts": posts}
     fs.writeFile output, JSON.stringify(result), (err) ->
       if err

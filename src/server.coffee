@@ -27,7 +27,7 @@ fetchtestdata = (req, next) ->
   days = req.params.days
   feed = req.params.feed
   
-  fs.readFile "test/data/12-13-1-all.xml", (err, data) =>
+  fs.readFile "test/data/12-13-1-all.xml", (err, data) ->
     if err
       _.first(next) err, null
     _.first(next) null, data, _.rest next
@@ -54,7 +54,7 @@ fetchres = switch process.env.NODE_ENV
   when "production"
     fetchdata
 
-server.get "/posts", (req, res, next) =>
+server.get "/v1/posts", (req, res, next) ->
   # This binding is needed in order for 'this' to refer
   # to 'res' when we finally call res.send
   _.bindAll(res)
@@ -64,6 +64,18 @@ server.get "/posts", (req, res, next) =>
   #
   # The key check will need to go somewhere as well
   transformreq null, req, [fetchres, transformres, res.send]
+
+server.get "/v1/posts/:id", (req, res, next) ->
+  # This binding is needed in order for 'this' to refer
+  # to 'res' when we finally call res.send
+  _.bindAll(res)
+
+  # There could be other things in this chain of calls
+  # and there is probably a better way to do this
+  #
+  # The key check will need to go somewhere as well
+  transformreq null, req, [fetchres, transformres, res.send]
+
 
 server.listen (process.env.PORT or 8080), ->
   console.log "#{server.name} listening at #{server.url}"
