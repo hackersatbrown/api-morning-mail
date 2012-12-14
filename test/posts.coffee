@@ -54,6 +54,12 @@ describe "/posts", ->
     it "should send the last week of 'undergrad' MM posts", (done) ->
       client.get "/posts?days=7&feed=undergrad", checkWeek "undergrad", done
 
+    ### # NEED TO TEST RANGES
+    ###
+
+### # NEED TO TEST INDIVIDUAL POSTS AS WELL
+###
+
 checkToday = (feed, done) ->
   (err, req, res, data) ->
     if err

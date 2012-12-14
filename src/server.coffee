@@ -7,6 +7,8 @@ parser = new xml2js.Parser()
 
 
 ### INPUT TRANSFORMERS ###
+
+# Does nothing but pass along the request for now.
 transformreq = (err, req, next) ->
   if err
     err
@@ -14,11 +16,13 @@ transformreq = (err, req, next) ->
   _.first(next) newreq, _.rest next
 
 ### DATA FETCHERS ###
+
+# This will pass the modified request to morningmail.brown.edu.
 fetchdata = (req, next) ->
   next {error: "not implemented yet"}, null
 
-
-# fetch test data based on request
+# Fetches test data based on the request.
+# Right now this just returns today for feed 'all'.
 fetchtestdata = (req, next) ->
   days = req.params.days
   feed = req.params.feed
@@ -26,35 +30,39 @@ fetchtestdata = (req, next) ->
   fs.readFile "test/data/12-13-1-all.xml", (err, data) =>
     if err
       _.first(next) err, null
-    parser.parseString data, (err, result) =>
-      if err
-        _.first(next) err, null
-      _.first(next) null, result, _.rest next
+    _.first(next) null, data, _.rest next
 
 
 ### OUTPUT TRANSFORMERS ###
+
+# Does nothing but translate from xml to json for now.
 transformres = (err, res, next) ->
   if err
-    next err
-  newres = res
-  _.first(next) newres
+    _.first(next) err
+  parser.parseString res, (err, result) ->
+    if err
+      _.first(next) err
+    _.first(next) result
 
 
-# Server config
+### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
 
-fetchres = fetchdata
-
-switch process.env.NODE_ENV
+fetchres = switch process.env.NODE_ENV
   when "development", "test"
-    # Do something to load in some fake data
-    fetchres = fetchtestdata
+    fetchtestdata
   when "production"
-    # Do some real stuff
-    fetchres = fetchdata
+    fetchdata
 
 server.get "/posts", (req, res, next) =>
+  # This binding is needed in order for 'this' to refer
+  # to 'res' when we finally call res.send
   _.bindAll(res)
+
+  # There could be other things in this chain of calls
+  # and there is probably a better way to do this
+  #
+  # The key check will need to go somewhere as well
   transformreq null, req, [fetchres, transformres, res.send]
 
 server.listen (process.env.PORT or 8080), ->
