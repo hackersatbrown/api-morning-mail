@@ -11,7 +11,7 @@ $(OUTDIR)/*.js: $(SRC)
 	@mkdir -p $(OUTDIR)
 	$(COFFEE) $(SRC)
 
-test:
+test: all
 	$(MOCHA) $(TEST)
 
 clean:
