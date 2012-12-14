@@ -75,7 +75,7 @@ describe "/v1/posts", ->
         checkFile done, "6", "12-12-2012", "undergrad"
       
 
-### # NEED TO TEST INDIVIDUAL POSTS AS WELL
+### # TEST INDIVIDUAL POSTS
 ###
 describe "/v1/posts/:id", ->
 

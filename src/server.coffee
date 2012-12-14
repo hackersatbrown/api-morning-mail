@@ -47,13 +47,12 @@ transformres = (err, res, next) ->
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
+process.env.NODE_ENV = process.env.NODE_ENV or "production"
 
 fetchres = switch process.env.NODE_ENV
   when "development", "test"
     fetchtestdata
   when "production"
-    fetchdata
-  else
     fetchdata
 
 server.get "/v1/posts", (req, res, next) ->
