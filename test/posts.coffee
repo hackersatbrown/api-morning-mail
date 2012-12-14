@@ -94,7 +94,7 @@ describe "/v1/posts/:id", ->
 checkFile = (done, days = "1", date = "12-13-2012", feed = "all") ->
   (err, req, res, data) ->
     if err
-      done err
+      return done err
     md = date.substr 0, date.lastIndexOf "-"
     loadFile "#{md}-#{days}-#{feed}.json", (result) ->
       assert.deepEqual data, result
@@ -109,7 +109,7 @@ loadFile = (file, next) ->
 checkId = (done, id) ->
   (err, req, res, data) ->
     if err
-      done err
+      return done err
     loadId "#{id}.json", (result) ->
       assert.deepEqual data, result
       done()

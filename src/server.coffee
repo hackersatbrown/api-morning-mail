@@ -11,7 +11,7 @@ parser = new xml2js.Parser()
 # Does nothing but pass along the request for now.
 transformreq = (err, req, next) ->
   if err
-    err
+    return err
   newreq = req
   _.first(next) newreq, _.rest next
 
@@ -19,7 +19,7 @@ transformreq = (err, req, next) ->
 
 # This will pass the modified request to morningmail.brown.edu.
 fetchdata = (req, next) ->
-  next {error: "not implemented yet"}, null
+  _.first(next) {error: "not implemented yet"}, null, _.rest next
 
 # Fetches test data based on the request.
 # Right now this just returns today for feed 'all'.
@@ -29,7 +29,7 @@ fetchtestdata = (req, next) ->
   
   fs.readFile "test/data/12-13-1-all.xml", (err, data) ->
     if err
-      _.first(next) err, null
+      return _.first(next) err, null
     _.first(next) null, data, _.rest next
 
 
@@ -38,10 +38,10 @@ fetchtestdata = (req, next) ->
 # Does nothing but translate from xml to json for now.
 transformres = (err, res, next) ->
   if err
-    _.first(next) err
+    return _.first(next) err
   parser.parseString res, (err, result) ->
     if err
-      _.first(next) err
+      return _.first(next) err
     _.first(next) result
 
 
@@ -52,6 +52,8 @@ fetchres = switch process.env.NODE_ENV
   when "development", "test"
     fetchtestdata
   when "production"
+    fetchdata
+  else
     fetchdata
 
 server.get "/v1/posts", (req, res, next) ->
