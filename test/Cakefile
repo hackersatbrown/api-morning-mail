@@ -1,7 +1,62 @@
 fs = require "fs"
-xml2js = require "xml2js"
+sax = require "sax"
+_ = require "underscore"
 
-parser = new xml2js.Parser()
+posts = []
+newpost = null
+nodename = null
+
+parser = sax.createStream(true)
+
+parser.on "error", (err) ->
+  throw err
+
+parser.on "opentag", (node) ->
+  newpost = {} if node.name is "item"
+  nodename = node.name
+
+parser.on "text", (text) ->
+  if newpost?
+    text = text.trim()
+    switch nodename
+      when "link"
+        search = "?id="
+        id = text.substr text.lastIndexOf(search)
+        id = id.substr search.length
+        newpost["id"] = newpost["id"] or id
+        newpost["link"] = newpost["link"] or text
+      when "pubDate"
+        d = Date.parse text
+        d = if _.isNaN d then text else new Date text
+        newpost["pubDate"] = newpost["pubDate"] or d
+      when "guid"
+        null
+      when "item"
+        null
+      else
+        newpost[nodename] = newpost[nodename] or text
+
+parser.on "cdata", (cdata) ->
+  if newpost?
+    text = cdata.trim()
+    switch nodename
+      when "link"
+        search = "?id="
+        id = text.substr text.lastIndexOf(search)
+        id = id.substr search.length
+        newpost["id"] = id
+        newpost["link"] = text
+      when "pubDate"
+        d = Date.parse text
+        d = if _.isNaN d then text else new Date text
+        newpost["pubDate"] = d
+      else
+        newpost[nodename] = text
+
+parser.on "closetag", (name) ->
+  switch name
+    when "item"
+      posts.push _.clone newpost
 
 option "-f", "--file [FILE]", "xml file to convert to json using xml2js"
 option "-o", "--output [DIR]", "directory for output"
@@ -14,14 +69,10 @@ task "xml2json", "convert xml file to json using xml2js", (options) ->
   outfile += "json"
   dir = options.output or "."
   output = dir + "/" + outfile
-
-  fs.readFile file, (err, data) ->
-    if err
-      throw err
-    parser.parseString data, (err, result) ->
+  fs.createReadStream(file).pipe(parser)
+  parser.on "end", () ->
+    result = {"posts": posts}
+    fs.writeFile output, JSON.stringify(result), (err) ->
       if err
         throw err
-      fs.writeFile output, JSON.stringify(result), (err) ->
-        if err
-          throw err
-        console.log "#{output} written."
+      console.log "#{output} written."
