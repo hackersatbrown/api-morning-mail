@@ -1,0 +1,27 @@
+fs = require "fs"
+xml2js = require "xml2js"
+
+parser = new xml2js.Parser()
+
+option "-f", "--file [FILE]", "xml file to convert to json using xml2js"
+option "-o", "--output [DIR]", "directory for output"
+
+task "xml2json", "convert xml file to json using xml2js", (options) ->
+  throw "No file specified." if not options.file?
+  file = options.file
+  outfile = file.substr file.lastIndexOf('/') + 1
+  outfile = outfile.substring 0, outfile.length - 3
+  outfile += "json"
+  dir = options.output or "."
+  output = dir + "/" + outfile
+
+  fs.readFile file, (err, data) ->
+    if err
+      throw err
+    parser.parseString data, (err, result) ->
+      if err
+        throw err
+      fs.writeFile output, JSON.stringify result, (err) ->
+        if err
+          throw err
+        console.log "#{output} written."
