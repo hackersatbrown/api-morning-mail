@@ -97,7 +97,7 @@ checkFile = (done, days = "1", date = "12-13-2012", feed = "all") ->
       return done err
     md = date.substr 0, date.lastIndexOf "-"
     loader.loadFile "#{testdata}/#{md}-#{days}-#{feed}.json", (result) ->
-      assert.deepEqual data, result
+      assert.deepEqual data, JSON.parse result
       done()
 
 checkId = (done, id) ->
@@ -105,5 +105,5 @@ checkId = (done, id) ->
     if err
       return done err
     loader.loadId "#{testdata}/#{id}.json", (result) ->
-      assert.deepEqual data, result
+      assert.deepEqual data, JSON.parse result
       done()

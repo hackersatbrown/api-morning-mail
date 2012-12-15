@@ -14,6 +14,9 @@ testdata = "test/data"
 transformreq = (err, req, next) ->
   if err
     return err
+  req.params.days = req.params.days or "1"
+  req.params.date = req.params.date or getToday()
+  req.params.feed = req.params.feed or "all"
   _.first(next) req, _.rest next
 
 ### DATA FETCHERS ###

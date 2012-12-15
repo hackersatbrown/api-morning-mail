@@ -4,13 +4,13 @@ loadFile = (file, next) ->
   fs.readFile file, (err, data) ->
     if err
       throw err
-    next JSON.parse data
+    next data
 
 loadId = (file, next) ->
   fs.readFile file, (err, data) ->
     if err
       throw err
-    next JSON.parse data
+    next data
 
 exports.loadFile = loadFile
 exports.loadId = loadId
