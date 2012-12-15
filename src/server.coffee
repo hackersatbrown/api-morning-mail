@@ -11,7 +11,7 @@ testdata = "test/data"
 ### INPUT TRANSFORMERS ###
 
 # Does nothing but pass along the request for now.
-transformreq = (err, req, next) ->
+transformReq = (err, req, next) ->
   if err
     return err
   req.params.days = req.params.days or "1"
@@ -22,12 +22,12 @@ transformreq = (err, req, next) ->
 ### DATA FETCHERS ###
 
 # This will pass the modified request to morningmail.brown.edu.
-fetchdata = (req, next) ->
+fetchData = (req, next) ->
   _.first(next) {error: "not implemented yet"}, null, _.rest next
 
 # Fetches test data based on the request.
 # Right now this just returns today for feed 'all'.
-fetchtestdata = (req, next) ->
+fetchTestData = (req, next) ->
   days = req.params.days
   date = req.params.date
   feed = req.params.feed
@@ -39,7 +39,7 @@ fetchtestdata = (req, next) ->
 ### OUTPUT TRANSFORMERS ###
 
 # Does nothing but translate from xml to json for now.
-transformres = (err, res, next) ->
+transformRes = (err, res, next) ->
   if err
     return _.first(next) err
   parser.parseString res, (err, result) ->
