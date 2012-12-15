@@ -1,5 +1,4 @@
 loader = require "./loader"
-
 testdata = "test/data"
 
 # Fetches test data based on the request.

@@ -9,23 +9,19 @@ testdata = "test/data"
 
 
 ### INPUT TRANSFORMERS ###
-
 # Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
   _.defaults(req.params, {days: "1", date: getToday(), feed: "all"})
   next()
 
 ### DATA FETCHERS ###
-
 # This will pass the modified request to morningmail.brown.edu.
 fetchRes = (req, res, next) ->
   return res.send {error: "not implemented yet"}
 
 ### OUTPUT TRANSFORMERS ###
-
 # Does nothing but translate from xml to json for now.
 transformRes = (req, res, next) ->
-  console.log "transformRES"
   parser.parseString req.params.xml, (err, result) ->
     if err
       return res.send {error: "transforming xml into json"}
@@ -35,16 +31,15 @@ transformRes = (req, res, next) ->
 # Send back the resulting json
 send = (req, res, next) ->
   res.send req.params.json
+  next()
 
-
-### helper functions ###
+# return today's date #
 getToday = ->
   today = new Date()
   m = today.getMonth()
   d = today.getDate()
   y = today.getFullYear()
   "#{m}-#{d}-#{y}"
-
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
