@@ -12,9 +12,7 @@ testdata = "test/data"
 
 # Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
-  req.params.days = req.params.days or "1"
-  req.params.date = req.params.date or getToday()
-  req.params.feed = req.params.feed or "all"
+  _.defaults(req.params, {days: "1", date: getToday(), feed: "all"})
   next()
 
 ### DATA FETCHERS ###
