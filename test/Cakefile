@@ -58,10 +58,10 @@ parser.on "closetag", (name) ->
     when "item"
       posts.push _.clone newpost
 
-option "-f", "--file [FILE]", "xml file to convert to json using xml2js"
+option "-f", "--file [FILE]", "xml file to convert to json"
 option "-o", "--output [DIR]", "directory for output"
 
-task "xml2json", "convert xml file to json using xml2js", (options) ->
+task "xml2json", "convert xml file to json", (options) ->
   throw "No file specified." if not options.file?
   file = options.file
   outfile = file.substr file.lastIndexOf('/') + 1

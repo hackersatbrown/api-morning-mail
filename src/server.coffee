@@ -45,6 +45,7 @@ transformres = (err, res, next) ->
   parser.parseString res, (err, result) ->
     if err
       return _.first(next) err
+    console.log result
     _.first(next) result
 
 
