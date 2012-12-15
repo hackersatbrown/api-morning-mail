@@ -3,7 +3,7 @@ fs = require "fs"
 xml2js = require "xml2js"
 _ = require "underscore"
 loader = require "./loader"
-console.log loader
+
 parser = new xml2js.Parser()
 testdata = "test/data"
 
