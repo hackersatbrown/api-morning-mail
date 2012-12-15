@@ -2,8 +2,10 @@ restify = require "restify"
 fs = require "fs"
 xml2js = require "xml2js"
 _ = require "underscore"
-
+loader = require "./loader"
+console.log loader
 parser = new xml2js.Parser()
+testdata = "test/data"
 
 
 ### INPUT TRANSFORMERS ###
@@ -12,8 +14,7 @@ parser = new xml2js.Parser()
 transformreq = (err, req, next) ->
   if err
     return err
-  newreq = req
-  _.first(next) newreq, _.rest next
+  _.first(next) req, _.rest next
 
 ### DATA FETCHERS ###
 
@@ -25,12 +26,11 @@ fetchdata = (req, next) ->
 # Right now this just returns today for feed 'all'.
 fetchtestdata = (req, next) ->
   days = req.params.days
+  date = req.params.date
   feed = req.params.feed
-  
-  fs.readFile "test/data/12-13-1-all.xml", (err, data) ->
-    if err
-      return _.first(next) err, null
-    _.first(next) null, data, _.rest next
+  md = date.substr 0, date.lastIndexOf "-"
+  loader.loadFile "#{testdata}/#{md}-#{days}-#{feed}.xml", (result) ->
+    _.first(next) null, result, _.rest next
 
 
 ### OUTPUT TRANSFORMERS ###
@@ -43,6 +43,19 @@ transformres = (err, res, next) ->
     if err
       return _.first(next) err
     _.first(next) result
+
+
+### helper functions ###
+getToday = ->
+  switch process.env.NODE_ENV
+    when "development", "test"
+      "12-13-2012"
+    when "production"
+      today = new Date()
+      m = today.getMonth()
+      d = today.getDate()
+      y = today.getFullYear()
+      "#{m}-#{d}-#{y}"
 
 
 ### SERVER SETUP ###

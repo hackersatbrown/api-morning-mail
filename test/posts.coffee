@@ -1,6 +1,6 @@
 restify = require "restify"
 assert = require "assert"
-fs = require "fs"
+loader = require "../bin/loader"
 
 client = restify.createJsonClient url: "http://localhost:8080"
 testdata = "test/data/json"
@@ -96,26 +96,14 @@ checkFile = (done, days = "1", date = "12-13-2012", feed = "all") ->
     if err
       return done err
     md = date.substr 0, date.lastIndexOf "-"
-    loadFile "#{md}-#{days}-#{feed}.json", (result) ->
+    loader.loadFile "#{testdata}/#{md}-#{days}-#{feed}.json", (result) ->
       assert.deepEqual data, result
       done()
-
-loadFile = (file, next) ->
-  fs.readFile "#{testdata}/#{file}", (err, data) ->
-    if err
-      throw err
-    next JSON.parse data
 
 checkId = (done, id) ->
   (err, req, res, data) ->
     if err
       return done err
-    loadId "#{id}.json", (result) ->
+    loader.loadId "#{testdata}/#{id}.json", (result) ->
       assert.deepEqual data, result
       done()
-
-loadId = (file, next) ->
-  fs.readFile "#{testdata}/#{file}", (err, data) ->
-    if err
-      throw err
-    next JSON.parse data
