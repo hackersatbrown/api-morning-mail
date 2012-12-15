@@ -64,9 +64,9 @@ getRealToday = ->
 server = restify.createServer name: "morning-mail"
 process.env.NODE_ENV = process.env.NODE_ENV or "production"
 
-[fetchres, getToday] = switch process.env.NODE_ENV
+[fetchRes, getToday] = switch process.env.NODE_ENV
   when "development", "test"
-    [fetchtestdata, getTestToday]
+    [fetchTestData, getTestToday]
   when "production"
     [fetchdata, getRealToday]
 
@@ -79,7 +79,7 @@ server.get "/v1/posts", (req, res, next) ->
   # and there is probably a better way to do this
   #
   # The key check will need to go somewhere as well
-  transformreq null, req, [fetchres, transformres, res.send]
+  transformReq null, req, [fetchRes, transformRes, res.send]
 
 server.get "/v1/posts/:id", (req, res, next) ->
   # This binding is needed in order for 'this' to refer
@@ -90,7 +90,7 @@ server.get "/v1/posts/:id", (req, res, next) ->
   # and there is probably a better way to do this
   #
   # The key check will need to go somewhere as well
-  transformreq null, req, [fetchres, transformres, res.send]
+  transformReq null, req, [fetchRes, transformRes, res.send]
 
 
 server.listen (process.env.PORT or 8080), ->
