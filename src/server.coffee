@@ -11,48 +11,36 @@ testdata = "test/data"
 ### INPUT TRANSFORMERS ###
 
 # Does nothing but pass along the request for now.
-transformReq = (err, req, next) ->
-  if err
-    return err
+transformReq = (req, res, next) ->
   req.params.days = req.params.days or "1"
   req.params.date = req.params.date or getToday()
   req.params.feed = req.params.feed or "all"
-  _.first(next) req, _.rest next
+  next()
 
 ### DATA FETCHERS ###
 
 # This will pass the modified request to morningmail.brown.edu.
-fetchData = (req, next) ->
-  _.first(next) {error: "not implemented yet"}, null, _.rest next
-
-# Fetches test data based on the request.
-# Right now this just returns today for feed 'all'.
-fetchTestData = (req, next) ->
-  days = req.params.days
-  date = req.params.date
-  feed = req.params.feed
-  md = date.substr 0, date.lastIndexOf "-"
-  loader.loadFile "#{testdata}/#{md}-#{days}-#{feed}.xml", (result) ->
-    _.first(next) null, result, _.rest next
-
+fetchRes = (req, res, next) ->
+  return res.send {error: "not implemented yet"}
 
 ### OUTPUT TRANSFORMERS ###
 
 # Does nothing but translate from xml to json for now.
-transformRes = (err, res, next) ->
-  if err
-    return _.first(next) err
-  parser.parseString res, (err, result) ->
+transformRes = (req, res, next) ->
+  console.log "transformRES"
+  parser.parseString req.params.xml, (err, result) ->
     if err
-      return _.first(next) err
-    _.first(next) result
+      return res.send {error: "transforming xml into json"}
+    req.params.json = result
+    next()
+
+# Send back the resulting json
+send = (req, res, next) ->
+  res.send req.params.json
 
 
 ### helper functions ###
-getTestToday = ->
-      "12-13-2012"
-
-getRealToday = ->
+getToday = ->
   today = new Date()
   m = today.getMonth()
   d = today.getDate()
@@ -62,36 +50,16 @@ getRealToday = ->
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
-process.env.NODE_ENV = process.env.NODE_ENV or "production"
 
-[fetchRes, getToday] = switch process.env.NODE_ENV
+switch process.env.NODE_ENV
   when "development", "test"
-    [fetchTestData, getTestToday]
-  when "production"
-    [fetchdata, getRealToday]
+    t = require "./test-funs"
+    fetchRes = t.fetchRes
+    getToday = t.getToday
 
-server.get "/v1/posts", (req, res, next) ->
-  # This binding is needed in order for 'this' to refer
-  # to 'res' when we finally call res.send
-  _.bindAll(res)
+server.get "/v1/posts", [transformReq, fetchRes, transformRes, send]
 
-  # There could be other things in this chain of calls
-  # and there is probably a better way to do this
-  #
-  # The key check will need to go somewhere as well
-  transformReq null, req, [fetchRes, transformRes, res.send]
-
-server.get "/v1/posts/:id", (req, res, next) ->
-  # This binding is needed in order for 'this' to refer
-  # to 'res' when we finally call res.send
-  _.bindAll(res)
-
-  # There could be other things in this chain of calls
-  # and there is probably a better way to do this
-  #
-  # The key check will need to go somewhere as well
-  transformReq null, req, [fetchRes, transformRes, res.send]
-
+server.get "/v1/posts/:id", [transformReq, fetchRes, transformRes, send]
 
 server.listen (process.env.PORT or 8080), ->
   console.log "#{server.name} listening at #{server.url}"
