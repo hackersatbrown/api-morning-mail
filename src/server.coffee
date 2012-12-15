@@ -49,27 +49,26 @@ transformres = (err, res, next) ->
 
 
 ### helper functions ###
-getToday = ->
-  switch process.env.NODE_ENV
-    when "development", "test"
+getTestToday = ->
       "12-13-2012"
-    when "production"
-      today = new Date()
-      m = today.getMonth()
-      d = today.getDate()
-      y = today.getFullYear()
-      "#{m}-#{d}-#{y}"
+
+getRealToday = ->
+  today = new Date()
+  m = today.getMonth()
+  d = today.getDate()
+  y = today.getFullYear()
+  "#{m}-#{d}-#{y}"
 
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
 process.env.NODE_ENV = process.env.NODE_ENV or "production"
 
-fetchres = switch process.env.NODE_ENV
+[fetchres, getToday] = switch process.env.NODE_ENV
   when "development", "test"
-    fetchtestdata
+    [fetchtestdata, getTestToday]
   when "production"
-    fetchdata
+    [fetchdata, getRealToday]
 
 server.get "/v1/posts", (req, res, next) ->
   # This binding is needed in order for 'this' to refer
