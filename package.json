@@ -6,11 +6,14 @@
     "start": "node bin/app.js"
   },
   "dependencies": {
-    "restify": "1.4.x"
+    "restify": "1.4.x",
+    "underscore": "1.4.x"
   },
   "devDependencies": {
     "mocha": "1.7.x",
-    "coffee-script": "1.4.x"
+    "coffee-script": "1.4.x",
+    "sax": "0.4.x",
+    "xml2js": "0.2.x",
   },
   "engines": {
     "node": "0.8.6",
