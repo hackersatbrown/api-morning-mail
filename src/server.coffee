@@ -4,7 +4,7 @@ xml2js = require "xml2js"
 _ = require "underscore"
 loader = require "./loader"
 
-parser = new xml2js.Parser()
+parser = new xml2js.Parser({explicitArray: false, trim: true})
 testdata = "test/data"
 
 
@@ -25,7 +25,19 @@ transformRes = (req, res, next) ->
   parser.parseString req.params.xml, (err, result) ->
     if err
       return res.send {error: "transforming xml into json"}
-    req.resultJson = result
+    items = result.rss.channel.item
+    json = _.map items, (item, idx, list) ->
+      search = "?id="
+      guid = item.guid._
+      guid = guid.substr guid.lastIndexOf search
+      id = guid.substr search.length
+      newitem = _.omit item, "guid"
+      newitem = _.defaults newitem, {id: id}
+      d = Date.parse newitem.pubDate
+      d = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
+      newitem.pubDate = d
+      return newitem
+    req.resultJson = {posts: json}
     next()
 
 # Send back the resulting json
