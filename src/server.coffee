@@ -25,12 +25,12 @@ transformRes = (req, res, next) ->
   parser.parseString req.params.xml, (err, result) ->
     if err
       return res.send {error: "transforming xml into json"}
-    req.params.json = result
+    req.resultJson = result
     next()
 
 # Send back the resulting json
 send = (req, res, next) ->
-  res.send req.params.json
+  res.send req.resultJson
   next()
 
 # return today's date #
