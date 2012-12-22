@@ -5,9 +5,9 @@ testdata = "test/data"
 # Right now this just returns today for feed 'all'.
 fetchRes = (req, res, next) ->
   days = req.params.days
-  date = req.params.date
+  today = req.params.today
   feed = req.params.feed
-  md = date.substr 0, date.lastIndexOf "-"
+  md = today.substr 0, today.lastIndexOf "-"
   loader.loadFile "#{testdata}/#{md}-#{days}-#{feed}.xml", (result) ->
     req.params.xml = result
     next()

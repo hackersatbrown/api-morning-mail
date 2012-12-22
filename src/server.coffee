@@ -12,12 +12,12 @@ testdata = "test/data"
 ### INPUT TRANSFORMERS ###
 # Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
-  console.log req.href
-  _.defaults(req.params, {days: "1", date: getToday(), feed: "all"})
-  today = moment getToday()
+  _.defaults(req.params, {days: '1', date: getToday(), today: getToday(), feed: "all"})
+  today = moment req.params.today
   date = moment req.params.date
-  diff = today.diff today, "days"
-  days = diff + req.params.days
+  diff = today.diff date, "days"
+  days = diff + parseInt(req.params.days)
+  req.params.days = days.toString()
   next()
 
 ### DATA FETCHERS ###
@@ -48,11 +48,17 @@ transformRes = (req, res, next) ->
 
 # Trims results based on the date range requested
 trimRes = (req, res, next) ->
-  items = req.resultJson
+  items = req.resultJson.posts
   start = moment req.params.date
-  end = start.diff "days", req.params.days
-  console.log start
-  console.log end
+  today = moment req.params.today
+  diff = today.diff start, "days"
+  end = start.clone().subtract "days", (req.params.days - diff - 1)
+  trimmed = _.filter items, (item) ->
+    d = moment item.pubDate
+    return start.diff(d, "days") >= 0 and d.diff(end, "days") >= 0
+  req.resultJson = {posts: trimmed}
+  console.log req.resultJson
+  next()
 
 # Send back the resulting json
 send = (req, res, next) ->
@@ -77,9 +83,7 @@ switch process.env.NODE_ENV
     fetchRes = t.fetchRes
     getToday = t.getToday
 
-server.get "/v1/posts", [transformReq, fetchRes, transformRes, send]
-
-server.get "/v1/posts?:days:date:feed", [transformReq, fetchRes, transformRes, send]
+server.get "/v1/posts", [transformReq, fetchRes, transformRes, trimRes, send]
 
 server.get "/v1/posts/:id", [transformReq, fetchRes, transformRes, send]
 
