@@ -51,7 +51,7 @@ server.use keyStore.check()
 
 switch process.env.NODE_ENV
   when "development", "test"
-    t = require "./test-funs"
+    t = require "./testFuns"
     fetchRes = t.fetchRes
     getToday = t.getToday
 

@@ -1,6 +1,7 @@
 keyLib = require "./keys"
 
 # TODO replace this temp store with a persistent store
+# but maybe keep this one for testing?
 store = ((->
   data = {}
   store =
@@ -14,16 +15,9 @@ store = ((->
   store
 )())
 
-
 switch process.env.NODE_ENV
   when "test"
-    addKey = (name, perms) ->
-      store.add name,
-        key: name
-        active: true
-        permissions: perms
-      , (err) -> err
-    addKey "test-key", {}
-    addKey "test-admin-key", adminKeys: true
+    t = require "./testFuns"
+    t.addTestKeys store
 
 module.exports = keyLib.init store
