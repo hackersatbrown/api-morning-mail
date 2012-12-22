@@ -19,3 +19,9 @@ module.exports =
 
   guardErr: (handler) ->
     (err, args...) -> should.not.exist err; handler args...
+
+  shouldErr: (done, status) ->
+    (err) ->
+      should.exist err
+      err.should.have.status status if status?
+      done()
