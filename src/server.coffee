@@ -57,7 +57,6 @@ trimRes = (req, res, next) ->
     d = moment item.pubDate
     return start.diff(d, "days") >= 0 and d.diff(end, "days") >= 0
   req.resultJson = {posts: trimmed}
-  console.log req.resultJson
   next()
 
 # Send back the resulting json
