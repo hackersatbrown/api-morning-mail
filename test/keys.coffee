@@ -5,7 +5,6 @@ h = require "./helpers"
 
 # Create a mock store so we don't need to rely on a db
 makeStore = ->
-  storeObj = {}
   store =
     data: {} # public so we can cheat
     add: (key, keyObj, done) ->
@@ -17,7 +16,7 @@ makeStore = ->
     update: (args...) -> this.add args... # Yay JS object semantics!
   store
 
-describe.only "keys", ->
+describe "keys", ->
 
   keys = null
   store = null
@@ -43,8 +42,8 @@ describe.only "keys", ->
         k.permissions.should.eql perms
         done()
 
-    it "should create a key with default permissions", (done) ->
-      keys.create null, checkCreate(read: true, done)
+    it "should create a key with no permissions", (done) ->
+      keys.create null, checkCreate([], done)
 
     it "should create a key with the given permissions", (done) ->
       perms = 
@@ -84,14 +83,12 @@ describe.only "keys", ->
         permissions:
           beSweet: true
           beSpicy: false
-          read: true
 
     it "should call next w/o err if given a valid key/perm pair", (done) ->
       # Simulating what we get from Restify
       keys.check(["beSweet"]) username: "pineapple", {}, done
 
-    it "should call next w/o err if given a valid key but no perms and " +
-       "that key has the default perm", (done) ->
+    it "should call next w/o err if given a valid key but no perms", (done) ->
       keys.check() username: "pineapple", {}, done
 
     it "should call next w/o err if given a valid key and an empty list " +

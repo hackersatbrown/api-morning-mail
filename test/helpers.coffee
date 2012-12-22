@@ -14,11 +14,14 @@ module.exports =
     client = restify.createJsonClient _.extend(
       url: "http://localhost:8080"
     , opts)
-    client.basicAuth (key ? "test-key"), "" # TODO fill in test key
+    client.basicAuth (key ? "test-key"), ""
     client
 
   guardErr: (handler) ->
-    (err, args...) -> should.not.exist err; handler args...
+    (err, req, res, args...) ->
+      res.should.have.status 200
+      should.not.exist err
+      handler req, res, args...
 
   shouldErr: (done, status) ->
     (err) ->

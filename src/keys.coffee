@@ -21,10 +21,6 @@ module.exports.init = (store) ->
   #   }
   # }
 
-  defaultPermName = "read"
-  defaultPerms = {}
-  defaultPerms[defaultPermName] = true
-
   generateKey = ->
     uuid.v4()
 
@@ -39,7 +35,7 @@ module.exports.init = (store) ->
         done new restify.InvalidCredentialsError(
           "Key #{key} does not have permissions #{perms}")
 
-  create: (perms = defaultPerms, done) ->
+  create: (perms = {}, done) ->
     # TODO check for uniqueness
     key = generateKey()
     keyObj = 
@@ -56,7 +52,7 @@ module.exports.init = (store) ->
       keyObj.active = false
       store.update key, keyObj, done
 
-  check: (perms = [defaultPermName]) ->
+  check: (perms = []) ->
     (req, res, next) ->
       # We expect that the key has been parsed out of the request and put in
       # the username field, since that's what Restify does.
@@ -66,4 +62,3 @@ module.exports.init = (store) ->
         next new restify.InvalidContentError "Key must be a string"
       else
         checkPerms req.username, perms, next
-
