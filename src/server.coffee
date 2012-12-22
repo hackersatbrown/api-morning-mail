@@ -2,16 +2,22 @@ restify = require "restify"
 fs = require "fs"
 xml2js = require "xml2js"
 _ = require "underscore"
+moment = require "moment"
 loader = require "./loader"
 
-parser = new xml2js.Parser({explicitArray: false, trim: true})
+parser = new xml2js.Parser({explicitArray: false, trim: true, charkey: 'data'})
 testdata = "test/data"
 
 
 ### INPUT TRANSFORMERS ###
 # Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
+  console.log req.href
   _.defaults(req.params, {days: "1", date: getToday(), feed: "all"})
+  today = moment getToday()
+  date = moment req.params.date
+  diff = today.diff today, "days"
+  days = diff + req.params.days
   next()
 
 ### DATA FETCHERS ###
@@ -28,7 +34,7 @@ transformRes = (req, res, next) ->
     items = result.rss.channel.item
     json = _.map items, (item, idx, list) ->
       search = "?id="
-      guid = item.guid._
+      guid = item.guid.data
       guid = guid.substr guid.lastIndexOf search
       id = guid.substr search.length
       newitem = _.omit item, "guid"
@@ -39,6 +45,14 @@ transformRes = (req, res, next) ->
       return newitem
     req.resultJson = {posts: json}
     next()
+
+# Trims results based on the date range requested
+trimRes = (req, res, next) ->
+  items = req.resultJson
+  start = moment req.params.date
+  end = start.diff "days", req.params.days
+  console.log start
+  console.log end
 
 # Send back the resulting json
 send = (req, res, next) ->
@@ -55,6 +69,7 @@ getToday = ->
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
+server.use restify.queryParser()
 
 switch process.env.NODE_ENV
   when "development", "test"
@@ -63,6 +78,8 @@ switch process.env.NODE_ENV
     getToday = t.getToday
 
 server.get "/v1/posts", [transformReq, fetchRes, transformRes, send]
+
+server.get "/v1/posts?:days:date:feed", [transformReq, fetchRes, transformRes, send]
 
 server.get "/v1/posts/:id", [transformReq, fetchRes, transformRes, send]
 

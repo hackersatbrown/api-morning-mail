@@ -47,7 +47,7 @@ describe "/v1/posts", ->
     ### # TEST THE LAST WEEK
     ###
     it "should send the last week of 'all' MM posts", (done) ->
-      client.get "/v1/posts?days=7&feed=undergrad", checkFile done, "7"
+      client.get "/v1/posts?days=7&feed=all", checkFile done, "7"
     
     it "should send the last week of 'undergrad' MM posts", (done) ->
       client.get "/v1/posts?days=7&feed=undergrad", checkFile done, "7", "12-13-2012", "undergrad"
