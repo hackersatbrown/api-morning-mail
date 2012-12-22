@@ -16,12 +16,9 @@ describe "/v1/keys", ->
           data.key.should.be.a "string"
           done()
 
-    it "should send an error if req key doesn't have admin permisions",
+    it "should send an error (401) if req key doesn't have admin permisions",
       (done) ->
-        badClient.post "/v1/keys", {}, (err, req, res, data) ->
-          should.exist err
-          res.should.have.status 401
-          done()
+        badClient.post "/v1/keys", {}, h.shouldErr(done, 401)
 
     it.skip "should send a key that authorizes other requests",
       (done) -> throw "NYI" # TODO
@@ -41,12 +38,9 @@ describe "/v1/keys/:key", ->
           # TODO check confirmation response
           done()
 
-    it "should send an error if req key doesn't have admin permissions",
+    it "should send an error (401) if req key doesn't have admin permissions",
       (done) ->
-        badClient.del "/v1/keys/#{key}", {}, (err, req, res, data) ->
-          should.exist err
-          res.should.have.status 401
-          done()
+        badClient.del "/v1/keys/#{key}", h.shouldErr(done, 401)
 
     it.skip "should make the key not able to authorize other requests",
       (done) -> throw "NYI" # TODO
