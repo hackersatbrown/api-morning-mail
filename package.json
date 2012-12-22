@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "mocha": "1.7.x",
+    "should": "0.6.x",
     "coffee-script": "1.4.x",
     "sax": "0.4.x",
     "xml2js": "0.2.x"
