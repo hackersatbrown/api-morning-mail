@@ -23,14 +23,14 @@ transformReq = (req, res, next) ->
 ### DATA FETCHERS ###
 # This will pass the modified request to morningmail.brown.edu.
 fetchRes = (req, res, next) ->
-  return res.send {error: "not implemented yet"}
+  next new restify.InternalError "Not implemented yet"
 
 ### OUTPUT TRANSFORMERS ###
 # Does nothing but translate from xml to json for now.
 transformRes = (req, res, next) ->
   parser.parseString req.params.xml, (err, result) ->
     if err
-      return res.send {error: "transforming xml into json"}
+      return next new restify.InternalError "Error transforming xml into json"
     items = result.rss.channel.item
     json = _.map items, (item, idx, list) ->
       search = "?id="

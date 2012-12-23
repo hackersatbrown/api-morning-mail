@@ -7,7 +7,8 @@ module.exports =
   fetchRes: (req, res, next) ->
     [days, date, feed] = [req.params.days, req.params.today, req.params.feed]
     md = date.substr 0, date.lastIndexOf "-"
-    loader.loadFile "#{testData}/#{md}-#{days}-#{feed}.xml", (result) ->
+    loader.loadFile "#{testData}/#{md}-#{days}-#{feed}.xml", (err, result) ->
+      return next err if err
       req.params.xml = result
       next()
 
