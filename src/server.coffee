@@ -16,8 +16,7 @@ transformReq = (req, res, next) ->
   today = moment req.params.today
   date = moment req.params.date
   diff = today.diff date, "days"
-  days = diff + parseInt(req.params.days)
-  req.params.days = days.toString()
+  req.params.days = (diff + parseInt(req.params.days)).toString()
   next()
 
 ### DATA FETCHERS ###
@@ -38,7 +37,7 @@ transformRes = (req, res, next) ->
       guid = guid.substr guid.lastIndexOf search
       id = guid.substr search.length
       newitem = _.omit item, "guid"
-      newitem = _.defaults newitem, {id: id}
+      newitem.id = id
       d = Date.parse newitem.pubDate
       d = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
       newitem.pubDate = d
@@ -52,6 +51,7 @@ trimRes = (req, res, next) ->
   start = moment req.params.date
   today = moment req.params.today
   diff = today.diff start, "days"
+  return next() if diff == 0
   end = start.clone().subtract "days", (req.params.days - diff - 1)
   trimmed = _.filter items, (item) ->
     d = moment item.pubDate
@@ -67,10 +67,7 @@ send = (req, res, next) ->
 # return today's date #
 getToday = ->
   today = new Date()
-  m = today.getMonth()
-  d = today.getDate()
-  y = today.getFullYear()
-  "#{m}-#{d}-#{y}"
+  "#{today.getMonth()}-#{today.getDate()}-#{today.getFullYear()}"
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
