@@ -13,11 +13,15 @@ testdata = "test/data"
 ### INPUT TRANSFORMERS ###
 # Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
-  _.defaults(req.params, {days: '1', date: getToday(), today: getToday(), feed: "all"})
+  _.defaults req.params,
+    days: '1'
+    date: getToday()
+    today: getToday()
+    feed: "all"
   today = moment req.params.today
   date = moment req.params.date
   diff = today.diff date, "days"
-  req.params.days = (diff + parseInt(req.params.days)).toString()
+  req.params.days = (diff + parseInt req.params.days).toString()
   next()
 
 ### DATA FETCHERS ###
@@ -43,7 +47,7 @@ transformRes = (req, res, next) ->
       d = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
       newitem.pubDate = d
       return newitem
-    req.resultJson = {posts: json}
+    req.resultJson = posts: json
     next()
 
 # Trims results based on the date range requested
@@ -53,11 +57,11 @@ trimRes = (req, res, next) ->
   today = moment req.params.today
   diff = today.diff start, "days"
   return next() if diff == 0
-  end = start.clone().subtract "days", (req.params.days - diff - 1)
+  end = start.clone().subtract "days", req.params.days - diff - 1
   trimmed = _.filter items, (item) ->
     d = moment item.pubDate
     return start.diff(d, "days") >= 0 and d.diff(end, "days") >= 0
-  req.resultJson = {posts: trimmed}
+  req.resultJson = posts: trimmed
   next()
 
 # Send back the resulting json
