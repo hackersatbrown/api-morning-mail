@@ -1,15 +1,9 @@
-restify = require "restify"
 assert = require "assert"
 loader = require "../bin/loader"
+h = require "./helpers"
 
-client = restify.createJsonClient url: "http://localhost:8080"
+client = h.createTestClient()
 testdata = "test/data/json"
-
-# Set up our server
-before ->
-  process.env.NODE_ENV = "test"
-  require "../bin/server"
-
 
 describe "/v1/posts", ->
   
