@@ -1,27 +1,16 @@
 should = require "should"
 _ = require "underscore"
 keysLib = require "../bin/keys"
-h = require "./helpers"
-
-# Create a mock store so we don't need to rely on a db
-makeStore = ->
-  store =
-    data: {} # public so we can cheat
-    add: (key, keyObj, done) ->
-      this.data[key] = keyObj
-      done()
-    lookup: (key, done) ->
-      res = this.data[key]
-      if res then done null, res else done "not found!"
-    update: (args...) -> this.add args... # Yay JS object semantics!
-  store
+t = require "../bin/testFuns"
+h = require "./_helpers"
 
 describe "keys", ->
 
   keys = null
   store = null
   beforeEach ->
-    store = makeStore()
+    # Create a mock store so we don't need to rely on a db
+    store = t.makeStore()
     keys = keysLib.init store
 
   describe ".create()", ->

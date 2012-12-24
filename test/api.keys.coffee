@@ -1,4 +1,4 @@
-h = require "./helpers"
+h = require "./_helpers"
 should = require "should"
 
 client = h.createTestClient()

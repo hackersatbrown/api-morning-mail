@@ -1,6 +1,6 @@
 assert = require "assert"
 loader = require "../bin/loader"
-h = require "./helpers"
+h = require "./_helpers"
 
 client = h.createTestClient()
 testdata = "test/data/json"
