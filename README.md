@@ -2,7 +2,27 @@
 
 A wrapper around Brown's Morning Mail Feed.
 
+## Developing
+
 To work on this repo, make a branch for the feature you are working on, and then submit a pull request to merge it back into master.
+
+To get the code running, first install dependencies:
+
+    $ npm install
+
+Then build:
+
+    $ make
+
+Then run the server:
+
+    $ ./run.sh
+    morning-mail listening at http://0.0.0.0:8080
+
+Note that at least one of the dependencies listed in `package.json` (Testify) is a reference to another Git repo. If you want a new version of that library, you'll need to delete the installed version so you can upgrade, like so:
+
+    $ rm -rf node_modules/testify
+    $ npm install
 
 ## Testing
 
