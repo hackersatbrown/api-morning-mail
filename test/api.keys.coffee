@@ -10,7 +10,7 @@ describe "/v1/keys", ->
 
     it "should send a fresh key if req key has admin permissions",
       (done) ->
-        adminClient.post "/v1/keys", {}, t.guardErr (req, res, data) ->
+        adminClient.post "/v1/keys", {}, t.shouldNotErr (req, res, data) ->
           should.exist data
           data.should.have.property "key" 
           data.key.should.be.a "string"
@@ -35,7 +35,7 @@ describe "/v1/keys/:key", ->
 
     it "should deactivate the key if req key has admin permissions",
       (done) ->
-        adminClient.del "/v1/keys/#{key}", t.guardErr (req, res, data) ->
+        adminClient.del "/v1/keys/#{key}", t.shouldNotErr (req, res, data) ->
           done()
 
     it "should send an error (401) if req key doesn't have admin permissions",
