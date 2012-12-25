@@ -4,6 +4,7 @@ redis = require "redis"
 
 makeRedisStore = ->
   # TODO will need to set host and port when running in production
+  # TODO do we want to select a db within Redis?
   client = redis.createClient()
   add: (key, keyObj, done) ->
     client.set key, JSON.stringify(keyObj), done
