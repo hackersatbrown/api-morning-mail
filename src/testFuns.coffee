@@ -15,6 +15,16 @@ module.exports =
 
   getToday: -> "12-13-2012"
 
+  makeStore: ->
+    data: {} # public so we can cheat
+    add: (key, keyObj, done) ->
+      this.data[key] = keyObj
+      done()
+    lookup: (key, done) ->
+      res = this.data[key]
+      if res then done null, res else done "not found!"
+    update: (args...) -> this.add args... # Yay JS object semantics!
+
   addTestKeys: (store) ->
     addKey = (name, perms) ->
       store.add name,

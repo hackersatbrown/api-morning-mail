@@ -1,23 +1,32 @@
 keyLib = require "./keys"
+_ = require "underscore"
+redis = require "redis"
 
-# TODO replace this temp store with a persistent store
-# but maybe keep this one for testing?
-store = ((->
-  data = {}
-  store =
-    add: (key, keyObj, done) ->
-      data[key] = keyObj
-      done()
-    lookup: (key, done) ->
-      res = data[key]
-      if res then done null, res else done "not found!"
-    update: (args...) -> this.add args...
-  store
-)())
+makeRedisStore = ->
+  # TODO will need to set host and port when running in production
+  # TODO do we want to select a db within Redis?
+  client = redis.createClient()
+  add: (key, keyObj, done) ->
+    client.set key, JSON.stringify(keyObj), done
+  update: (args...) -> this.add args... # same as add
+  lookup: (key, done) ->
+    client.get key, (err, data) ->
+      if err
+        done err
+      else
+        done null, JSON.parse data.toString()
+
+store = null
 
 switch process.env.NODE_ENV
-  when "test"
+  when "test", "development"
     t = require "./testFuns"
+    if process.env.TEST_REDIS
+      store = makeRedisStore() 
+    else
+      store = t.makeStore()
     t.addTestKeys store
+  when "production"
+    store = makeRedisStore() 
 
 module.exports = keyLib.init store
