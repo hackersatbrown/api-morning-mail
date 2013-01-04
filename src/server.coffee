@@ -7,14 +7,17 @@ moment = require "moment"
 loader = require "./loader"
 keyStore = require "./keyStore"
 
-parser = new xml2js.Parser({explicitArray: false, trim: true, charkey: 'data'})
+parser = new xml2js.Parser
+  explicitArray: false
+  trim: true
+  charkey: 'data'
 testdata = "test/data"
 
 ### INPUT TRANSFORMERS ###
 # Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
   _.defaults req.params,
-    days: '1'
+    days: "1"
     date: getToday()
     today: getToday()
     feed: "all"
@@ -27,6 +30,11 @@ transformReq = (req, res, next) ->
 ### DATA FETCHERS ###
 # This will pass the modified request to morningmail.brown.edu.
 fetchRes = (req, res, next) ->
+  next new restify.InternalError "Not implemented yet"
+
+fetchId = (req, res, next) ->
+  if not req.params.id
+    return next new restify.InvalidContentError "No post id specified"
   next new restify.InternalError "Not implemented yet"
 
 ### OUTPUT TRANSFORMERS ###
@@ -64,6 +72,9 @@ trimRes = (req, res, next) ->
   req.resultJson = posts: trimmed
   next()
 
+transformIdRes = (req, res, next) ->
+  next new restify.InternalErorr "Not implemented yet"
+
 # Send back the resulting json
 send = (req, res, next) ->
   res.send req.resultJson
@@ -90,7 +101,7 @@ switch process.env.NODE_ENV
 
 server.get "/v1/posts", [transformReq, fetchRes, transformRes, trimRes, send]
 
-server.get "/v1/posts/:id", [transformReq, fetchRes, transformRes, send]
+server.get "/v1/posts/:id", [fetchId, transformIdRes, send]
 
 server.post "/v1/keys",
   keyStore.check(["adminKeys"]),
