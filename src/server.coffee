@@ -3,6 +3,7 @@ fs = require "fs"
 xml2js = require "xml2js"
 _ = require "underscore"
 moment = require "moment"
+request = require "request"
 
 loader = require "./loader"
 keyStore = require "./keyStore"
@@ -30,12 +31,16 @@ transformReq = (req, res, next) ->
 ### DATA FETCHERS ###
 # This will pass the modified request to morningmail.brown.edu.
 fetchRes = (req, res, next) ->
-  next new restify.InternalError "Not implemented yet"
-
-fetchId = (req, res, next) ->
-  if not req.params.id
-    return next new restify.InvalidContentError "No post id specified"
-  next new restify.InternalError "Not implemented yet"
+  uri = "http://morningmail.brown.edu/xml.php?"
+  uri += "feed=#{req.params.feed}&"
+  uri += "days=#{req.params.days}"
+  request.get
+    uri: uri,
+    (err, res, body) ->
+      if err
+        return next new restify.InternalError "Error getting xml from CIS"
+      req.params.xml = body
+      next()
 
 ### OUTPUT TRANSFORMERS ###
 # Does nothing but translate from xml to json for now.
@@ -72,8 +77,36 @@ trimRes = (req, res, next) ->
   req.resultJson = posts: trimmed
   next()
 
+transformIdReq = (req, res, next) ->
+  if not req.params.id
+    return next new restify.InvalidContentError "No post id specified"
+  _.defaults req.params,
+    days: "7"
+    date: getToday()
+    today: getToday()
+    feed: "all"
+  next()
+
 transformIdRes = (req, res, next) ->
-  next new restify.InternalErorr "Not implemented yet"
+  parser.parseString req.params.xml, (err, result) ->
+    if err
+      return next new restify.InternalError "Error transforming xml into json"
+    items = result.rss.channel.item
+    items = _.filter items, (item, idx, list) ->
+      search = "?id="
+      guid = item.guid.data
+      guid = guid.substr guid.lastIndexOf search
+      id = guid.substr search.length
+      return id == req.params.id
+    json = _.map items, (item, idx, list) ->
+      newitem = _.omit item, "guid"
+      newitem.id = req.params.id
+      d = Date.parse newitem.pubDate
+      d = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
+      newitem.pubDate = d
+      return newitem
+    req.resultJson = posts: _.first json
+    next()
 
 # Send back the resulting json
 send = (req, res, next) ->
@@ -83,7 +116,7 @@ send = (req, res, next) ->
 # return today's date #
 getToday = ->
   today = new Date()
-  "#{today.getMonth()}-#{today.getDate()}-#{today.getFullYear()}"
+  "#{today.getMonth() + 1}-#{today.getDate()}-#{today.getFullYear()}"
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
@@ -101,7 +134,7 @@ switch process.env.NODE_ENV
 
 server.get "/v1/posts", [transformReq, fetchRes, transformRes, trimRes, send]
 
-server.get "/v1/posts/:id", [fetchId, transformIdRes, send]
+server.get "/v1/posts/:id", [transformIdReq, fetchRes, transformIdRes, send]
 
 server.post "/v1/keys",
   keyStore.check(["adminKeys"]),

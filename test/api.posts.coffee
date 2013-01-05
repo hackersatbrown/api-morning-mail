@@ -82,7 +82,7 @@ describe "/v1/posts/:id", ->
       client.get "/v1/posts/43395", checkId done, "43395"
 
     it "should return Winter Closing information from 12-10", (done) ->
-      client.get "/v1/posts/43395", checkId done, "43575"
+      client.get "/v1/posts/43575", checkId done, "43575"
 
 
 checkFile = (done, days = "1", date = "12-13-2012", feed = "all") ->
