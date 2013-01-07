@@ -5,7 +5,7 @@ module.exports =
   # Fetches test data based on the request.
   # Right now this just returns today for feed 'all'.
   fetchRes: (req, res, next) ->
-    [days, date, feed] = [req.params.days, req.params.today, req.params.feed]
+    [days, date, feed] = [req.params.span, req.params.today, req.params.feed]
     md = date.substr 0, date.lastIndexOf "-"
     loader.loadFile "#{testData}/#{md}-#{days}-#{feed}.xml", (err, result) ->
       return next err if err

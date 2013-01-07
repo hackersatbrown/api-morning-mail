@@ -15,17 +15,33 @@ parser = new xml2js.Parser
 testdata = "test/data"
 
 ### INPUT TRANSFORMERS ###
-# Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
   _.defaults req.params,
     days: "1"
+    span: "1"
     date: getToday()
     today: getToday()
     feed: "all"
+  # Diff is the number of days between today and the end of the request range
+  # Span is the number of days from today to the start of the request range
+  # Thus, span is the number of days we want to request from CIS
   today = moment req.params.today
-  date = moment req.params.date
-  diff = today.diff date, "days"
-  req.params.days = (diff + parseInt req.params.days).toString()
+  diff = today.diff moment(req.params.date), "days"
+  req.params.span = (diff + parseInt req.params.days).toString()
+  next()
+
+# Looks for a specific post in the last week of posts.
+# Should we return an error if the post is too old?
+# Or just return an empty result?
+transformIdReq = (req, res, next) ->
+  if not req.params.id
+    return next new restify.InvalidContentError "No post id specified"
+  _.defaults req.params,
+    days: "7"
+    span: "7"
+    date: getToday()
+    today: getToday()
+    feed: "all"
   next()
 
 ### DATA FETCHERS ###
@@ -33,7 +49,7 @@ transformReq = (req, res, next) ->
 fetchRes = (req, res, next) ->
   uri = "http://morningmail.brown.edu/xml.php?"
   uri += "feed=#{req.params.feed}&"
-  uri += "days=#{req.params.days}"
+  uri += "days=#{req.params.span}"
   request.get
     uri: uri,
     (err, res, body) ->
@@ -50,41 +66,33 @@ transformRes = (req, res, next) ->
       return next new restify.InternalError "Error transforming xml into json"
     items = result.rss.channel.item
     json = _.map items, (item, idx, list) ->
+      # Parse the id out of the guid
       search = "?id="
-      guid = item.guid.data
-      guid = guid.substr guid.lastIndexOf search
+      guid = item.guid.data.substr item.guid.data.lastIndexOf search
       id = guid.substr search.length
       newitem = _.omit item, "guid"
       newitem.id = id
+
+      # Put the date in normal javascript datestring format if possible
       d = Date.parse newitem.pubDate
-      d = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
-      newitem.pubDate = d
+      newitem.pubDate = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
       return newitem
     req.resultJson = posts: json
     next()
 
 # Trims results based on the date range requested
 trimRes = (req, res, next) ->
-  items = req.resultJson.posts
+  # If the days and span are equal, then the range
+  # starts with today, so no trimming is necessary.
+  return next() if req.params.days == req.params.span
+  
+  # Otherwise, only return items between start and end
   start = moment req.params.date
-  today = moment req.params.today
-  diff = today.diff start, "days"
-  return next() if diff == 0
-  end = start.clone().subtract "days", req.params.days - diff - 1
-  trimmed = _.filter items, (item) ->
+  end = start.clone().subtract "days", req.params.days - 1
+  trimmed = _.filter req.resultJson.posts, (item) ->
     d = moment item.pubDate
     return start.diff(d, "days") >= 0 and d.diff(end, "days") >= 0
   req.resultJson = posts: trimmed
-  next()
-
-transformIdReq = (req, res, next) ->
-  if not req.params.id
-    return next new restify.InvalidContentError "No post id specified"
-  _.defaults req.params,
-    days: "7"
-    date: getToday()
-    today: getToday()
-    feed: "all"
   next()
 
 transformIdRes = (req, res, next) ->
@@ -94,8 +102,7 @@ transformIdRes = (req, res, next) ->
     items = result.rss.channel.item
     items = _.filter items, (item, idx, list) ->
       search = "?id="
-      guid = item.guid.data
-      guid = guid.substr guid.lastIndexOf search
+      guid = item.guid.data.substr item.guid.data.lastIndexOf search
       id = guid.substr search.length
       return id == req.params.id
     json = _.map items, (item, idx, list) ->

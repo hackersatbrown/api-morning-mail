@@ -1,4 +1,5 @@
 fs = require "fs"
+restify = require "restify"
 
 module.exports.loadFile = (file, next) ->
   fs.readFile file, (err, data) ->
