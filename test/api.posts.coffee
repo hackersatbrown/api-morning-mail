@@ -2,7 +2,7 @@ assert = require "assert"
 loader = require "../bin/loader"
 t = require "testify"
 
-client = t.createJsonClient()
+client = t.createJsonClient {}, username: "test-key"
 testdata = "test/data/json"
 
 describe "/v1/posts", ->
