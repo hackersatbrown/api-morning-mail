@@ -1,8 +1,8 @@
 assert = require "assert"
 loader = require "../bin/loader"
-h = require "./helpers"
+t = require "testify"
 
-client = h.createTestClient()
+client = t.createJsonClient()
 testdata = "test/data/json"
 
 describe "/v1/posts", ->

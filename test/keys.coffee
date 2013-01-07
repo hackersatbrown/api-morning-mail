@@ -1,27 +1,16 @@
 should = require "should"
 _ = require "underscore"
 keysLib = require "../bin/keys"
-h = require "./helpers"
-
-# Create a mock store so we don't need to rely on a db
-makeStore = ->
-  store =
-    data: {} # public so we can cheat
-    add: (key, keyObj, done) ->
-      this.data[key] = keyObj
-      done()
-    lookup: (key, done) ->
-      res = this.data[key]
-      if res then done null, res else done "not found!"
-    update: (args...) -> this.add args... # Yay JS object semantics!
-  store
+tf = require "../bin/testFuns"
+t = require "testify"
 
 describe "keys", ->
 
   keys = null
   store = null
   beforeEach ->
-    store = makeStore()
+    # Create a mock store so we don't need to rely on a db
+    store = tf.makeStore()
     keys = keysLib.init store
 
   describe ".create()", ->
@@ -69,10 +58,10 @@ describe "keys", ->
         done()
 
     it "should error if given a valid key", (done) ->
-      keys.deactivate "missing", h.shouldErr done
+      keys.deactivate "missing", t.shouldErr done
 
     it "should error if given a non-string key", (done) ->
-      keys.deactivate 42, h.shouldErr done
+      keys.deactivate 42, t.shouldErr done
 
   describe ".check()", ->
 
@@ -96,10 +85,10 @@ describe "keys", ->
       keys.check([]) username: "pineapple", {}, done
 
     it "should error (401) if given an invalid key", (done) ->
-      keys.check([]) username: "banana", {}, h.shouldErr(done, 401)
+      keys.check([]) username: "banana", {}, t.shouldErr(done, 401)
 
     it "should error (400) if not given a key", (done) ->
-      keys.check([]) {}, {}, h.shouldErr(done, 400)
+      keys.check([]) {}, {}, t.shouldErr(done, 400)
 
     it "should error (400) if given an non-string key", (done) ->
-      keys.check([]) username: 888, {}, h.shouldErr(done, 400)
+      keys.check([]) username: 888, {}, t.shouldErr(done, 400)
