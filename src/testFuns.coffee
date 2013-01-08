@@ -1,18 +1,20 @@
 loader = require "./loader"
 testData = "test/data"
+today = "12-13-2012"
 
 module.exports =
+
   # Fetches test data based on the request.
   # Right now this just returns today for feed 'all'.
   fetchRes: (req, res, next) ->
-    [days, date, feed] = [req.params.span, req.params.today, req.params.feed]
-    md = date.substr 0, date.lastIndexOf "-"
+    [days, date, feed] = [req.params.span, today, req.params.feed]
+    md = date[...date.lastIndexOf "-"]
     loader.loadFile "#{testData}/#{md}-#{days}-#{feed}.xml", (err, result) ->
       return next err if err
-      req.params.xml = result
+      req.resultXml = result
       next()
 
-  getToday: -> "12-13-2012"
+  getToday: -> today
 
   makeStore: ->
     data: {} # public so we can cheat

@@ -20,12 +20,11 @@ transformReq = (req, res, next) ->
     days: "1"
     span: "1"
     date: getToday()
-    today: getToday()
     feed: "all"
   # Diff is the number of days between today and the end of the request range
   # Span is the number of days from today to the start of the request range
   # Thus, span is the number of days we want to request from CIS
-  today = moment req.params.today
+  today = moment getToday()
   diff = today.diff moment(req.params.date), "days"
   req.params.span = (diff + parseInt req.params.days).toString()
   next()
@@ -40,7 +39,6 @@ transformIdReq = (req, res, next) ->
     days: "7"
     span: "7"
     date: getToday()
-    today: getToday()
     feed: "all"
   next()
 
@@ -55,21 +53,21 @@ fetchRes = (req, res, next) ->
     (err, res, body) ->
       if err
         return next new restify.InternalError "Error getting xml from CIS"
-      req.params.xml = body
+      req.resultXml = body
       next()
 
 ### OUTPUT TRANSFORMERS ###
 # Does nothing but translate from xml to json for now.
 transformRes = (req, res, next) ->
-  parser.parseString req.params.xml, (err, result) ->
+  parser.parseString req.resultXml, (err, result) ->
     if err
       return next new restify.InternalError "Error transforming xml into json"
     items = result.rss.channel.item
     json = _.map items, (item, idx, list) ->
       # Parse the id out of the guid
       search = "?id="
-      guid = item.guid.data.substr item.guid.data.lastIndexOf search
-      id = guid.substr search.length
+      guid = item.guid.data
+      id = guid[guid.lastIndexOf(search) + search.length..]
       newitem = _.omit item, "guid"
       newitem.id = id
 
@@ -77,7 +75,7 @@ transformRes = (req, res, next) ->
       d = Date.parse newitem.pubDate
       newitem.pubDate = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
       return newitem
-    req.resultJson = posts: json
+    req.resultJson = json
     next()
 
 # Trims results based on the date range requested
@@ -89,30 +87,28 @@ trimRes = (req, res, next) ->
   # Otherwise, only return items between start and end
   start = moment req.params.date
   end = start.clone().subtract "days", req.params.days - 1
-  trimmed = _.filter req.resultJson.posts, (item) ->
+  trimmed = _.filter req.resultJson, (item) ->
     d = moment item.pubDate
     return start.diff(d, "days") >= 0 and d.diff(end, "days") >= 0
-  req.resultJson = posts: trimmed
+  req.resultJson = trimmed
   next()
 
 transformIdRes = (req, res, next) ->
-  parser.parseString req.params.xml, (err, result) ->
+  parser.parseString req.resultXml, (err, result) ->
     if err
       return next new restify.InternalError "Error transforming xml into json"
     items = result.rss.channel.item
-    items = _.filter items, (item, idx, list) ->
+    item = _.find items, (item, idx, list) ->
       search = "?id="
-      guid = item.guid.data.substr item.guid.data.lastIndexOf search
-      id = guid.substr search.length
+      guid = item.guid.data
+      id = guid[guid.lastIndexOf(search) + search.length..]
       return id == req.params.id
-    json = _.map items, (item, idx, list) ->
-      newitem = _.omit item, "guid"
-      newitem.id = req.params.id
-      d = Date.parse newitem.pubDate
-      d = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
-      newitem.pubDate = d
-      return newitem
-    req.resultJson = posts: _.first json
+    item = _.omit item, "guid"
+    item.id = req.params.id
+    d = Date.parse item.pubDate
+    d = if _.isNaN d then item.pubDate else new Date item.pubDate
+    item.pubDate = d
+    req.resultJson = item
     next()
 
 # Send back the resulting json
