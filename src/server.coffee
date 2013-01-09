@@ -2,48 +2,136 @@ restify = require "restify"
 fs = require "fs"
 xml2js = require "xml2js"
 _ = require "underscore"
+moment = require "moment"
+request = require "request"
 
 loader = require "./loader"
 keyStore = require "./keyStore"
 
-parser = new xml2js.Parser()
+parser = new xml2js.Parser
+  explicitArray: false
+  trim: true
+  charkey: 'data'
 testdata = "test/data"
 
 ### INPUT TRANSFORMERS ###
-# Does nothing but pass along the request for now.
 transformReq = (req, res, next) ->
-  _.defaults(req.params, {days: "1", date: getToday(), feed: "all"})
+  _.defaults req.params,
+    days: "1"
+    span: "1"
+    date: getToday()
+    feed: "all"
+  # Diff is the number of days between today and the end of the request range
+  # Span is the number of days from today to the start of the request range
+  # Thus, span is the number of days we want to request from CIS
+  today = moment getToday()
+  diff = today.diff moment(req.params.date), "days"
+  req.params.span = (diff + parseInt req.params.days).toString()
+  next()
+
+# Looks for a specific post in the last week of posts.
+# Should we return an error if the post is too old?
+# Or just return an empty result?
+transformIdReq = (req, res, next) ->
+  if not req.params.id
+    return next new restify.InvalidContentError "No post id specified"
+  _.defaults req.params,
+    days: "7"
+    span: "7"
+    date: getToday()
+    feed: "all"
   next()
 
 ### DATA FETCHERS ###
 # This will pass the modified request to morningmail.brown.edu.
 fetchRes = (req, res, next) ->
-  return res.send {error: "not implemented yet"}
+  uri = "http://morningmail.brown.edu/xml.php?"
+  uri += "feed=#{req.params.feed}&"
+  uri += "days=#{req.params.span}"
+  request.get
+    uri: uri,
+    (err, res, body) ->
+      if err
+        return next new restify.InternalError "Error getting xml from CIS"
+      req.resultXml = body
+      next()
 
 ### OUTPUT TRANSFORMERS ###
 # Does nothing but translate from xml to json for now.
 transformRes = (req, res, next) ->
-  parser.parseString req.params.xml, (err, result) ->
+  parser.parseString req.resultXml, (err, result) ->
     if err
-      return res.send {error: "transforming xml into json"}
-    req.params.json = result
+      return next new restify.InternalError "Error transforming xml into json"
+    items = result.rss.channel.item
+    json = _.map items, (item, idx, list) ->
+      # Parse the id out of the guid
+      search = "?id="
+      guid = item.guid.data
+      id = guid[guid.lastIndexOf(search) + search.length..]
+      newitem = _.omit item, "guid"
+      newitem.id = id
+
+      # Put the date in normal javascript datestring format if possible
+      d = Date.parse newitem.pubDate
+      newitem.pubDate = if _.isNaN d then newitem.pubDate else new Date newitem.pubDate
+      return newitem
+    req.resultJson = json
+    next()
+
+# Trims results based on the date range requested
+trimRes = (req, res, next) ->
+  # If the days and span are equal, then the range
+  # starts with today, so no trimming is necessary.
+  return next() if req.params.days == req.params.span
+  
+  # Otherwise, only return items between start and end
+  start = moment req.params.date
+  end = start.clone().subtract "days", req.params.days - 1
+  trimmed = _.filter req.resultJson, (item) ->
+    d = moment item.pubDate
+    return start.diff(d, "days") >= 0 and d.diff(end, "days") >= 0
+  req.resultJson = trimmed
+  next()
+
+transformIdRes = (req, res, next) ->
+  parser.parseString req.resultXml, (err, result) ->
+    if err
+      return next new restify.InternalError "Error transforming xml into json"
+    items = result.rss.channel.item
+    item = _.find items, (item, idx, list) ->
+      search = "?id="
+      guid = item.guid.data
+      id = guid[guid.lastIndexOf(search) + search.length..]
+      return id == req.params.id
+    if item == undefined
+      search = "?id="
+      guid = _.first(items).guid.data
+      newestId = guid[guid.lastIndexOf(search) + search.length..]
+      if req.params.id < newestId
+        return next new restify.InvalidContentError "Post #{req.params.id} is older than one week."
+      else if req.params.id > newestId
+        return next new restify.InvalidContentError "Post #{req.params.id} does not exist."
+    item = _.omit item, "guid"
+    item.id = req.params.id
+    d = Date.parse item.pubDate
+    d = if _.isNaN d then item.pubDate else new Date item.pubDate
+    item.pubDate = d
+    req.resultJson = item
     next()
 
 # Send back the resulting json
 send = (req, res, next) ->
-  res.send req.params.json
+  res.send req.resultJson
   next()
 
 # return today's date #
 getToday = ->
   today = new Date()
-  m = today.getMonth()
-  d = today.getDate()
-  y = today.getFullYear()
-  "#{m}-#{d}-#{y}"
+  "#{today.getMonth() + 1}-#{today.getDate()}-#{today.getFullYear()}"
 
 ### SERVER SETUP ###
 server = restify.createServer name: "morning-mail"
+server.use restify.queryParser()
 
 server.use restify.authorizationParser()
 # Check every request to make sure it has an active key.
@@ -55,9 +143,9 @@ switch process.env.NODE_ENV
     fetchRes = t.fetchRes
     getToday = t.getToday
 
-server.get "/v1/posts", [transformReq, fetchRes, transformRes, send]
+server.get "/v1/posts", [transformReq, fetchRes, transformRes, trimRes, send]
 
-server.get "/v1/posts/:id", [transformReq, fetchRes, transformRes, send]
+server.get "/v1/posts/:id", [transformIdReq, fetchRes, transformIdRes, send]
 
 server.post "/v1/keys",
   keyStore.check(["adminKeys"]),

@@ -2,7 +2,7 @@ assert = require "assert"
 loader = require "../bin/loader"
 t = require "testify"
 
-client = t.createJsonClient()
+client = t.createJsonClient {}, username: "test-key"
 testdata = "test/data/json"
 
 describe "/v1/posts", ->
@@ -41,7 +41,7 @@ describe "/v1/posts", ->
     ### # TEST THE LAST WEEK
     ###
     it "should send the last week of 'all' MM posts", (done) ->
-      client.get "/v1/posts?days=7&feed=undergrad", checkFile done, "7"
+      client.get "/v1/posts?days=7&feed=all", checkFile done, "7"
     
     it "should send the last week of 'undergrad' MM posts", (done) ->
       client.get "/v1/posts?days=7&feed=undergrad", checkFile done, "7", "12-13-2012", "undergrad"
@@ -82,22 +82,27 @@ describe "/v1/posts/:id", ->
       client.get "/v1/posts/43395", checkId done, "43395"
 
     it "should return Winter Closing information from 12-10", (done) ->
-      client.get "/v1/posts/43395", checkId done, "43575"
+      client.get "/v1/posts/43575", checkId done, "43575"
+
+    it "should return an InvalidContentError", (done) ->
+      client.get "/v1/posts/99999", t.shouldErr(done, 400)
+
+    it "should return an InvalidContentError", (done) ->
+      client.get "/v1/posts/30000", t.shouldErr(done, 400)
 
 
 checkFile = (done, days = "1", date = "12-13-2012", feed = "all") ->
   (err, req, res, data) ->
-    if err
-      return done err
+    return done err if err
     md = date.substr 0, date.lastIndexOf "-"
-    loader.loadFile "#{testdata}/#{md}-#{days}-#{feed}.json", (result) ->
+    loader.loadFile "#{testdata}/#{md}-#{days}-#{feed}.json", (err, result) ->
       assert.deepEqual data, JSON.parse result
       done()
 
 checkId = (done, id) ->
   (err, req, res, data) ->
-    if err
-      return done err
-    loader.loadId "#{testdata}/#{id}.json", (result) ->
+    return done err if err
+    loader.loadFile "#{testdata}/#{id}.json", (err, result) ->
+      return done err if err
       assert.deepEqual data, JSON.parse result
       done()
