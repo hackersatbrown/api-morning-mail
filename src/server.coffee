@@ -103,6 +103,14 @@ transformIdRes = (req, res, next) ->
       guid = item.guid.data
       id = guid[guid.lastIndexOf(search) + search.length..]
       return id == req.params.id
+    if item == undefined
+      search = "?id="
+      guid = _.first(items).guid.data
+      newestId = guid[guid.lastIndexOf(search) + search.length..]
+      if req.params.id < newestId
+        return next new restify.InvalidContentError "Post #{req.params.id} is older than one week."
+      else if req.params.id > newestId
+        return next new restify.InvalidContentError "Post #{req.params.id} does not exist."
     item = _.omit item, "guid"
     item.id = req.params.id
     d = Date.parse item.pubDate

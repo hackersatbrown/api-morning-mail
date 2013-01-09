@@ -84,6 +84,12 @@ describe "/v1/posts/:id", ->
     it "should return Winter Closing information from 12-10", (done) ->
       client.get "/v1/posts/43575", checkId done, "43575"
 
+    it "should return an InvalidContentError", (done) ->
+      client.get "/v1/posts/99999", t.shouldErr(done, 400)
+
+    it "should return an InvalidContentError", (done) ->
+      client.get "/v1/posts/30000", t.shouldErr(done, 400)
+
 
 checkFile = (done, days = "1", date = "12-13-2012", feed = "all") ->
   (err, req, res, data) ->
