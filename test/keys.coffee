@@ -84,11 +84,14 @@ describe "keys", ->
        "of permissions", (done) ->
       keys.check([]) username: "pineapple", {}, done
 
+    shouldErr = (done) ->
+      (err) -> should.exist err; done()
+
     it "should error (401) if given an invalid key", (done) ->
-      keys.check([]) username: "banana", {}, t.shouldErr(done, 401)
+      keys.check([]) username: "banana", {}, shouldErr done
 
     it "should error (400) if not given a key", (done) ->
-      keys.check([]) {}, {}, t.shouldErr(done, 400)
+      keys.check([]) {}, {}, shouldErr done
 
     it "should error (400) if given an non-string key", (done) ->
-      keys.check([]) username: 888, {}, t.shouldErr(done, 400)
+      keys.check([]) username: 888, {}, shouldErr done
