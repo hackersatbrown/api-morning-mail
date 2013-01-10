@@ -24,6 +24,37 @@ Note that at least one of the dependencies listed in `package.json` (Testify) is
     $ rm -rf node_modules/testify
     $ npm install
 
+## Building for production
+
+### Setup
+
+First, you'll need to have the Heroku production repo cloned in a dir called `prod`.
+To clone this repo, run:
+
+    $ heroku git:clone --app api-morning-mail
+
+(Taken from <https://devcenter.heroku.com/articles/collab>.) You'll have to
+have shared access to the application first, which is controlled by
+@jonahkagan.
+
+### Building
+
+To build for production, run:
+
+    $ make prod
+
+The command will build and copy the necessary files to `prod`. If you want to
+deploy, just run:
+
+    $ cd prod && git push
+
+It's usually nice to test out that the production version runs first by doing
+this:
+
+    $ cd prod && foreman start
+    17:54:09 web.1  | started with pid 21324
+    17:54:09 web.1  | morning-mail listening at http://0.0.0.0:5000
+
 ## Testing
 
 To run the tests, just run `make test`.

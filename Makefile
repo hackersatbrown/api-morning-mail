@@ -7,6 +7,8 @@ TESTDIR = test
 TESTGREP = ""
 COFFEE = ./node_modules/.bin/coffee -c -o $(OUTDIR)
 MOCHA = ./node_modules/.bin/mocha -R spec --compilers coffee:coffee-script
+PRODDIR = prod
+PROD = package.json Procfile bin
 
 all: $(OUT)
 	
@@ -19,3 +21,10 @@ test: all
 
 clean:
 	rm -rf $(OUTDIR)
+
+prod: all
+	cp -r $(PROD) $(PRODDIR)
+	cd prod \
+		&& npm install --production \
+		&& git add . \
+		&& git commit -m "update"
