@@ -3,9 +3,16 @@ _ = require "underscore"
 redis = require "redis"
 
 makeRedisStore = ->
-  # TODO will need to set host and port when running in production
   # TODO do we want to select a db within Redis?
-  client = redis.createClient()
+  client = 
+    if process.env.REDISTOGO_URL
+      rtg = require("url").parse process.env.REDISTOGO_URL
+      client = redis.createClient rtg.port, rtg.hostname
+      client.auth rtg.auth.split(":")[1]
+      client
+    else
+      redis.createClient()
+
   add: (key, keyObj, done) ->
     client.set key, JSON.stringify(keyObj), done
   update: (args...) -> this.add args... # same as add
