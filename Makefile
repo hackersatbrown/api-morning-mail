@@ -24,6 +24,7 @@ clean:
 
 deploy: all
 	git checkout deploy
+	git pull heroku master
 	@# We can add the bin because .gitignore in the deploy branch has been edited
 	@# to not ignore bin
 	git add $(OUTDIR)
@@ -31,6 +32,7 @@ deploy: all
 	git diff --quiet --staged --exit-code || git commit -m "Updated bin"
 	git merge master --no-edit
 	git push heroku deploy:master
+	git checkout master
 	@echo "Hold on, about to run 'heroku ps' to check the deployment"
 	@sleep 2
 	heroku ps
