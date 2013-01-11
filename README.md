@@ -24,6 +24,15 @@ Note that at least one of the dependencies listed in `package.json` (Testify) is
     $ rm -rf node_modules/testify
     $ npm install
 
+## Deploying
+
+The code is deployed by pushing the `deploy` branch to a remote Heroku
+repository. Basically, the flow is: merge `master` into `deploy`, commit new
+compiled files in `deploy`, push `deploy` to Heroku. You should do this all
+using:
+
+    $ make deploy
+
 ## Testing
 
 To run the tests, just run `make test`.
