@@ -24,6 +24,23 @@ Note that at least one of the dependencies listed in `package.json` (Testify) is
     $ rm -rf node_modules/testify
     $ npm install
 
+## Deploying
+
+The code is deployed by pushing the `deploy` branch to a remote Heroku
+repository. These instructions assume the Heroku app has been already created (following this guide: https://devcenter.heroku.com/articles/nodejs).
+
+First you'll need to be a collaborator on the Heroku app (see https://devcenter.heroku.com/categories/collaboration). Then you have to create that branch and set it up with Heroku:
+
+    $ heroku git:remote --app api-morning-mail
+    $ git fetch heroku
+    $ git branch deploy heroku/master
+
+To deploy, the flow is: merge `master` into `deploy`, commit new
+compiled files in `deploy`, push `deploy` to Heroku. You should do this all
+using:
+
+    $ make deploy
+
 ## Testing
 
 To run the tests, just run `make test`.
