@@ -27,7 +27,13 @@ Note that at least one of the dependencies listed in `package.json` (Testify) is
 ## Deploying
 
 The code is deployed by pushing the `deploy` branch to a remote Heroku
-repository. Basically, the flow is: merge `master` into `deploy`, commit new
+repository. First you have to set up that branch with Heroku:
+
+    $ heroku git:remote --app api-morning-mail
+    $ git fetch heroku
+    $ git branch deploy heroku/master
+
+To deploy, the flow is: merge `master` into `deploy`, commit new
 compiled files in `deploy`, push `deploy` to Heroku. You should do this all
 using:
 
