@@ -27,7 +27,9 @@ Note that at least one of the dependencies listed in `package.json` (Testify) is
 ## Deploying
 
 The code is deployed by pushing the `deploy` branch to a remote Heroku
-repository. First you have to set up that branch with Heroku:
+repository. These instructions assume the Heroku app has been already created (following this guide: https://devcenter.heroku.com/articles/nodejs).
+
+First you'll need to be a collaborator on the Heroku app (see https://devcenter.heroku.com/categories/collaboration). Then you have to create that branch and set it up with Heroku:
 
     $ heroku git:remote --app api-morning-mail
     $ git fetch heroku
