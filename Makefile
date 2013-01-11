@@ -7,8 +7,6 @@ TESTDIR = test
 TESTGREP = ""
 COFFEE = ./node_modules/.bin/coffee -c -o $(OUTDIR)
 MOCHA = ./node_modules/.bin/mocha -R spec --compilers coffee:coffee-script
-PRODDIR = prod
-PROD = package.json Procfile bin
 
 all: $(OUT)
 	
