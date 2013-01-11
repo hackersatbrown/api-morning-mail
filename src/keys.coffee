@@ -56,9 +56,10 @@ module.exports.init = (store) ->
     (req, res, next) ->
       # We expect that the key has been parsed out of the request and put in
       # the username field, since that's what Restify does.
-      if not req.username?
+      key = req.authorization?.basic?.username
+      if not key?
         next new restify.InvalidContentError "Missing key"
-      else if not _.isString req.username
+      else if not _.isString key
         next new restify.InvalidContentError "Key must be a string"
       else
-        checkPerms req.username, perms, next
+        checkPerms key, perms, next

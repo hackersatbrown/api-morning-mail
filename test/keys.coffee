@@ -73,25 +73,27 @@ describe "keys", ->
           beSweet: true
           beSpicy: false
 
+    makeReq = (key) -> # Simulate Restify's auth parser
+      authorization: basic: username: key
+
     it "should call next w/o err if given a valid key/perm pair", (done) ->
-      # Simulating what we get from Restify
-      keys.check(["beSweet"]) username: "pineapple", {}, done
+      keys.check(["beSweet"]) makeReq("pineapple"), {}, done
 
     it "should call next w/o err if given a valid key but no perms", (done) ->
-      keys.check() username: "pineapple", {}, done
+      keys.check() makeReq("pineapple"), {}, done
 
     it "should call next w/o err if given a valid key and an empty list " +
        "of permissions", (done) ->
-      keys.check([]) username: "pineapple", {}, done
+      keys.check([]) makeReq("pineapple"), {}, done
 
-    shouldErr = (done) ->
+    shouldErr = (done, status) ->
       (err) -> should.exist err; done()
 
     it "should error (401) if given an invalid key", (done) ->
-      keys.check([]) username: "banana", {}, shouldErr done
+      keys.check([]) makeReq("banana"), {}, shouldErr done
 
     it "should error (400) if not given a key", (done) ->
       keys.check([]) {}, {}, shouldErr done
 
     it "should error (400) if given an non-string key", (done) ->
-      keys.check([]) username: 888, {}, shouldErr done
+      keys.check([]) makeReq(888), {}, shouldErr done
